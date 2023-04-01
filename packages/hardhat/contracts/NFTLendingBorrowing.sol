@@ -20,11 +20,11 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         uint256 paymentTime;
         uint256 createdAt;
         bool isValid;
-        bool isLended;
+        bool isLent;
     }
     struct Borrow {
         uint256 requestID;
-        uint256 lendedAt;
+        uint256 lentAt;
         address lender;
         bool isLiquidated;
         bool isPaid;
@@ -36,9 +36,10 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
     uint256 public dailyInterestRate = 1; // 1% daily interest rate
 
     // Events //
-    // FIX: her şeyi event yapmaya gerek yok mesela requestLendedda requestId ve lender detayları vermen lazım.
+    // FIX: her şeyi event yapmaya gerek yok mesela requestLentda requestId ve lender detayları vermen lazım.
 
     event RequestCreated(
+        uint256 indexed requestId,
         address nftContract,
         address indexed borrower,
         uint256 nftTokenId,
@@ -48,10 +49,11 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
     event RequestCancelled(
         uint256 indexed requestId
     );
-    event RequestLended(
+    event RequestLent(
+        uint256 borrowsId,
         uint256 indexed requestId,
         address indexed lender,
-        uint256 lendedAt
+        uint256 lentAt
     );
     event BorrowLiquidated(
         uint256 indexed borrowId,
@@ -87,12 +89,13 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
             paymentTime: _paymentTime,
             createdAt: block.timestamp,
             isValid: true,
-            isLended: false
+            isLent: false
         });
         requests.push(newRequest);
-        lastRequestId++;
 
-        emit RequestCreated(_nftContract, msg.sender, _nftTokenId, _requestedAmount, _paymentTime);
+        emit RequestCreated(lastRequestId, _nftContract, msg.sender, _nftTokenId, _requestedAmount, _paymentTime);
+        
+        lastRequestId++;
     }
 
     function cancelBorrowRequest(uint256 _requestId) public {
@@ -112,19 +115,18 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         require(_requestId < lastRequestId, "Request ID is not valid");
 
         Request storage req = requests[_requestId];
-        require(!req.isLended, "Request is already lended");
+        require(!req.isLent, "Request is already lent");
         require(req.isValid, "Request is not valid");
         require(msg.value == req.requestedAmount, "You need to send exact amount of ETH");
 
         Borrow memory newBorrow = Borrow({
             requestID: _requestId,
-            lendedAt: block.timestamp,
+            lentAt: block.timestamp,
             lender: msg.sender,
             isLiquidated: false,
             isPaid: false
         });
         borrows.push(newBorrow);
-        lastBorrowsId++;
         
         IERC721 nft = IERC721(req.nftContract);
         nft.transferFrom(req.borrower, address(this), req.nftTokenId);
@@ -132,23 +134,25 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         (bool success, ) = req.borrower.call{value: msg.value}("");
         require(success, "Transfer failed.");
 
-        req.isLended = true;
+        req.isLent = true;
 
-        emit RequestLended(
+        emit RequestLent(
+            lastBorrowsId,
             _requestId,
             msg.sender,
             block.timestamp
         );
+        lastBorrowsId++;
     }
     // Liquidate a request
     function liquidate(uint256 _borrowId) public {
         Borrow storage borrow = borrows[_borrowId];
-        require(borrow.lendedAt != 0, "Borrow is not exists");
+        require(borrow.lentAt != 0, "Borrow is not exists");
         require(!borrow.isLiquidated, "Borrow is already liquidated");
         require(!borrow.isPaid, "Borrow is already paid");
 
         Request storage req = requests[borrow.requestID];
-        require(borrow.lendedAt + req.paymentTime < block.timestamp, "Deadline is not passed");
+        require(borrow.lentAt + req.paymentTime < block.timestamp, "Deadline is not passed");
         
         IERC721 nft = IERC721(req.nftContract);
         nft.transferFrom(address(this), borrow.lender , req.nftTokenId);
@@ -170,7 +174,7 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         uint256 total = amountToPay(_borrowId);
         require(msg.value >= total, "You need to send exact amount of ETH");
 
-        require(borrow.lendedAt != 0, "Borrow ID is not valid");
+        require(borrow.lentAt != 0, "Borrow ID is not valid");
         require(!borrow.isPaid, "This request is already paid");
         require(!borrow.isLiquidated, "This request is already liquidated");
         
@@ -197,7 +201,7 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
     function amountToPay(uint256 _borrowId) public view returns (uint256) {
         Borrow memory borrow = borrows[_borrowId];
         Request memory req = requests[borrow.requestID];
-        uint256 secondPassed = block.timestamp - borrow.lendedAt;
+        uint256 secondPassed = block.timestamp - borrow.lentAt;
         uint256 interest = secondPassed * req.requestedAmount * dailyInterestRate / 100 / 86400;
         return req.requestedAmount + interest;
     }
@@ -205,7 +209,7 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
     function amountToPayAt(uint256 _borrowId, uint256 _timestamp) public view returns (uint256) {
         Borrow memory borrow = borrows[_borrowId];
         Request memory req = requests[borrow.requestID];
-        uint256 secondPassed = _timestamp - borrow.lendedAt;
+        uint256 secondPassed = _timestamp - borrow.lentAt;
         uint256 interest = secondPassed * req.requestedAmount * dailyInterestRate / 100 / 86400;
         return req.requestedAmount + interest;
     }

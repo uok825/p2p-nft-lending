@@ -8,9 +8,26 @@ export const ContractData = () => {
   const [transitionEnabled, setTransitionEnabled] = useState(true);
   const [isRightDirection, setIsRightDirection] = useState(false);
   const [marqueeSpeed, setMarqueeSpeed] = useState(0);
+  const [lastRequestId, setLastRequestId] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const greetingRef = useRef<HTMLDivElement>(null);
+
+  useScaffoldContractRead({
+    contractName: "NFTLendingBorrowing",
+    functionName: "lastRequestId",
+    callback: (LastRequestId: any) => {
+      setLastRequestId(LastRequestId.toNumber());
+    },
+  });
+
+
+
+
+
+
+
+
 
   const { data: totalCounter } = useScaffoldContractRead({
     contractName: "YourContract",
