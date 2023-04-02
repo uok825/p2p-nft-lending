@@ -8,10 +8,14 @@ import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 
 contract NFT is ERC721 {
+    event nftMinted(
+        uint256 tokenId
+    );
     uint256 public lastTokenId = 0;
     constructor() ERC721("BorLen", "BORLEN") {}
     function mint() public {
         _mint(msg.sender, lastTokenId);
+        emit nftMinted(lastTokenId);
         lastTokenId++;
     }
 //test code ends

@@ -5,7 +5,8 @@ import { HareIcon } from "./assets/HareIcon";
 import { ArrowSmallRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useScaffoldContractRead, useScaffoldContractWrite, useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
 import { BigNumber } from "ethers";
-
+import { useContractWrite } from "wagmi";
+// APPROVE BUTONU EKLE
 export const ContractInteraction = () => {
 
   const startTime = Math.floor(Date.now() / 1000);
@@ -22,13 +23,13 @@ export const ContractInteraction = () => {
   const [paybackBorrowId, setPaybackBorrowId] = useState(0);
   const [valueToPayback, setValueToPayback] = useState("");
   const [date, setDate] = useState(startTime);
+  const [tokenId, setTokenId] = useState(0);
 
   const wrapSetPaybackId = (id: any) => {
     setPaybackBorrowId(id);
     let newDate = Math.floor(Date.now() / 1000) + 90;
     setDate(newDate);
   }
-
 
   useScaffoldContractRead({
     contractName: "NFTLendingBorrowing",
@@ -61,6 +62,8 @@ export const ContractInteraction = () => {
       setRequestId(requestId.toString());
     }
   });
+
+
   useScaffoldEventSubscriber({
     contractName: "NFTLendingBorrowing",
     eventName: "RequestLent",
@@ -69,6 +72,15 @@ export const ContractInteraction = () => {
       ...args: any[]
     ) => {
       setLendBorrowId(borrowsId.toString());
+    }
+  });
+  useScaffoldEventSubscriber({
+    contractName: "NFT",
+    eventName: "nftMinted",
+    listener: (
+      tokenId: any,
+    ) => {
+      setTokenId(tokenId.toString());
     }
   });
 
@@ -131,13 +143,47 @@ export const ContractInteraction = () => {
     value: valueToPayback,
   });
   
+
+  const  { writeAsync: mintNFT, isLoading: mintisLoading} = useScaffoldContractWrite({
+    contractName: "NFT",
+    functionName: "mint",
+  })
+
+
   return (
     <div className="flex bg-base-300 relative pb-10">
       <DiamondIcon className="absolute top-24" />
       <CopyIcon className="absolute bottom-0 left-36" />
       <HareIcon className="absolute right-0 bottom-24" />
+      
       <div className="flex flex-col w-full mx-5 sm:mx-8 2xl:mx-20">
+      <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
+          <div className="">
+          <span className="text-4xl sm:text-3xl text-black">Mint Your Test NFT</span>
+              <button
+                className={`btn btn-primary rounded-full capitalize font-bold font-white mt-8 w-48 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${mintisLoading ? "loading" : ""
+                  }`}
+                onClick={mintNFT}
+              >
+                {!mintisLoading && (
+                  <>
+                    Mint Your Test NFT
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="mt-4 flex gap-2 items-start">
+            {tokenId ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-lg font-bai-jamjuree text-black">Your NFT Token ID</span>
+                <span className="text-2xl font-bai-jamjuree text-black">{tokenId}</span>
+              </div>
+            ) : (<></>)}
+          </div>
+          </div>
+
         <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
+
           <span className="text-4xl sm:text-6xl text-black">Create A New Borrow Request</span>
 
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">

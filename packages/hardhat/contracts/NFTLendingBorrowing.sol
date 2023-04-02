@@ -3,14 +3,15 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 /**
- * @author Utku
+ * @author uok825 / utkuomer.eth
  */
- // TO TEST THE CONTRACT I INHERITED ERC721
-contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
+
+contract NFTLendingBorrowing is ReentrancyGuard {
 
 
-    // Struct & State Variables //
+    // Structs, States and Mappings //
 
     struct Request {
         address nftContract;
@@ -22,6 +23,7 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         bool isValid;
         bool isLent;
     }
+
     struct Borrow {
         uint256 requestID;
         uint256 lentAt;
@@ -29,14 +31,27 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         bool isLiquidated;
         bool isPaid;
     }
+
     Request[] public requests;
     Borrow[] public borrows;
+
+    mapping(address => mapping(uint256 => uint256)) public addressToRequestIds;
+    mapping(address => mapping(uint256 => uint256)) public addressToBorrowIds;
+
+    mapping(address => uint256) public addressToRequestCount;
+    mapping(address => uint256) public addressToBorrowCount;
+
+    // addressToRequestCount[msg.sender] = 3;
+    // addressToRequestIds[msg.sender][0] -> 120
+    // addressToRequestIds[msg.sender][1] -> 121
+    // addressToRequestIds[msg.sender][2] -> 132
+
     uint256 lastRequestId = 0;
     uint256 lastBorrowsId = 0;
+
     uint256 public dailyInterestRate = 1; // 1% daily interest rate
 
     // Events //
-    // FIX: her şeyi event yapmaya gerek yok mesela requestLentda requestId ve lender detayları vermen lazım.
 
     event RequestCreated(
         uint256 indexed requestId,
@@ -46,15 +61,18 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         uint256 indexed requestedAmount,
         uint256 paymentTime
     );
+
     event RequestCancelled(
         uint256 indexed requestId
     );
+
     event RequestLent(
         uint256 borrowsId,
         uint256 indexed requestId,
         address indexed lender,
         uint256 lentAt
     );
+
     event BorrowLiquidated(
         uint256 indexed borrowId,
         address indexed liquidator,
@@ -93,6 +111,11 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         });
         requests.push(newRequest);
 
+        uint256 userRequestCount = addressToRequestCount[msg.sender];
+
+        addressToRequestIds[msg.sender][userRequestCount] = lastRequestId;
+        addressToRequestCount[msg.sender]++;
+
         emit RequestCreated(lastRequestId, _nftContract, msg.sender, _nftTokenId, _requestedAmount, _paymentTime);
         
         lastRequestId++;
@@ -127,7 +150,12 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
             isPaid: false
         });
         borrows.push(newBorrow);
-        
+
+        uint256 userBorrowCount = addressToBorrowCount[msg.sender];
+        addressToBorrowIds[msg.sender][userBorrowCount] = lastBorrowsId;
+
+        addressToBorrowCount[msg.sender]++;
+
         IERC721 nft = IERC721(req.nftContract);
         nft.transferFrom(req.borrower, address(this), req.nftTokenId);
 
@@ -144,7 +172,9 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         );
         lastBorrowsId++;
     }
+
     // Liquidate a request
+
     function liquidate(uint256 _borrowId) public {
         Borrow storage borrow = borrows[_borrowId];
         require(borrow.lentAt != 0, "Borrow is not exists");
@@ -166,7 +196,9 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
             block.timestamp
         );
     }
+
     // Payback a request
+
     function payback(uint256 _borrowId) public payable nonReentrant {
         Borrow storage borrow = borrows[_borrowId];
         Request storage req = requests[borrow.requestID];
@@ -181,36 +213,66 @@ contract NFTLendingBorrowing is ReentrancyGuard { // BorLen = Borrow and Lend
         require(req.isValid, "This request is not valid");
 
         // transfer nft
+
         IERC721 nft = IERC721(req.nftContract);
         nft.transferFrom(address(this), req.borrower, req.nftTokenId);
 
         // payback total
+
         (bool success, ) = borrow.lender.call{value: total}("");
         require(success, "Transfer failed.");
 
         // refund
+
         (bool success2, ) = msg.sender.call{value: msg.value - total}("");
         require(success2, "Transfer failed.");
 
         // invalidate request
+
         borrow.isPaid = true;
         req.isValid = false;
     }
 
     // get interest rate
+
     function amountToPay(uint256 _borrowId) public view returns (uint256) {
         Borrow memory borrow = borrows[_borrowId];
         Request memory req = requests[borrow.requestID];
+
         uint256 secondPassed = block.timestamp - borrow.lentAt;
         uint256 interest = secondPassed * req.requestedAmount * dailyInterestRate / 100 / 86400;
+        
         return req.requestedAmount + interest;
     }
 
     function amountToPayAt(uint256 _borrowId, uint256 _timestamp) public view returns (uint256) {
         Borrow memory borrow = borrows[_borrowId];
         Request memory req = requests[borrow.requestID];
+    
         uint256 secondPassed = _timestamp - borrow.lentAt;
         uint256 interest = secondPassed * req.requestedAmount * dailyInterestRate / 100 / 86400;
+        
         return req.requestedAmount + interest;
+    }
+    function getUserRequestCount(address _user) public view returns (uint256) {
+        return addressToRequestCount[_user];
+    }
+    function getUserBorrowCount(address _user) public view returns (uint256) {
+        return addressToBorrowCount[_user];
+    }
+
+    function getUserRequestIds(address _user) public view returns (uint256[] memory) {
+        uint256[] memory ids = new uint256[](addressToRequestCount[_user]);
+        for (uint256 i = 0; i < addressToRequestCount[_user]; i++) {
+            ids[i] = addressToRequestIds[_user][i];
+        }
+        return ids;
+    }
+    function getUserBorrowIds(address _user) public view returns (uint256[] memory) {
+        uint256[] memory ids = new uint256[](addressToBorrowCount[_user]);
+        for (uint256 i = 0; i < addressToBorrowCount[_user]; i++) {
+            ids[i] = addressToBorrowIds[_user][i];
+        }
+        return ids;
     }
 }
