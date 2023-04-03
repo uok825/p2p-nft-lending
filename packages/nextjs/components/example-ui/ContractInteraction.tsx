@@ -5,17 +5,19 @@ import { HareIcon } from "./assets/HareIcon";
 import { ArrowSmallRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useScaffoldContractRead, useScaffoldContractWrite, useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
 import { BigNumber } from "ethers";
-import { useContractWrite } from "wagmi";
-// APPROVE BUTONU EKLE
+import { useAccount, useContractWrite } from "wagmi";
+import { getContractNames } from "~~/utils/scaffold-eth/contractNames";
+
 export const ContractInteraction = () => {
 
   const startTime = Math.floor(Date.now() / 1000);
 
-  const [nftContractAddress, setNftContractAddress] = useState("");
+  const [userNftContractAddress, setUserNftContractAddress] = useState("");
   const [nftTokenId, setNftTokenId] = useState(0);
   const [requestedAmount, setRequestedAmount] = useState(0);
   const [paymentTime, setPaymentTime] = useState(0);
   const [requestId, setRequestId] = useState(0);
+  const [cancelRequestId, setCancelRequestId] = useState(0);
   const [lendRequestId, setLendRequestId] = useState(0);
   const [valueToLend, setValueToLend] = useState("");
   const [lendBorrowId, setLendBorrowId] = useState(0);
@@ -24,12 +26,18 @@ export const ContractInteraction = () => {
   const [valueToPayback, setValueToPayback] = useState("");
   const [date, setDate] = useState(startTime);
   const [tokenId, setTokenId] = useState(0);
+  const [personBorrowIds, setPersonBorrowIds] = useState([]);
+  const [personRequestIds, setPersonRequestIds] = useState([]);
+  const {address, isConnected} = useAccount();
+  const NFTBorrowingLendingContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const nftContractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 
   const wrapSetPaybackId = (id: any) => {
     setPaybackBorrowId(id);
     let newDate = Math.floor(Date.now() / 1000) + 90;
     setDate(newDate);
   }
+
 
   useScaffoldContractRead({
     contractName: "NFTLendingBorrowing",
@@ -41,6 +49,7 @@ export const ContractInteraction = () => {
     },
   });
 
+
   useScaffoldContractRead({
     contractName: "NFTLendingBorrowing",
     functionName: "amountToPayAt",
@@ -51,6 +60,32 @@ export const ContractInteraction = () => {
     },
 
   });
+
+  const { isLoading: borrowisLoading } = useScaffoldContractRead({
+    contractName: "NFTLendingBorrowing",
+    functionName: "getUserBorrowIds",
+    args: [
+      address
+    ],
+    onSuccess(personBorrowIds: any) {
+      console.log("Person Borrow Ids", personBorrowIds)
+      setPersonBorrowIds(personBorrowIds.map((id: any) => id.toString()));
+    },
+  });
+
+
+  const { isLoading: requestisLoading } = useScaffoldContractRead({
+    contractName: "NFTLendingBorrowing",
+    functionName: "getUserRequestIds",
+    args: [
+      address
+    ],
+    onSuccess(personRequestIds: any) {
+      console.log("Person Request Ids", personRequestIds)
+      setPersonRequestIds(personRequestIds.map((id: any) => id.toString()));
+    },
+  });
+
 
   useScaffoldEventSubscriber({
     contractName: "NFTLendingBorrowing",
@@ -74,6 +109,8 @@ export const ContractInteraction = () => {
       setLendBorrowId(borrowsId.toString());
     }
   });
+
+
   useScaffoldEventSubscriber({
     contractName: "NFT",
     eventName: "nftMinted",
@@ -84,11 +121,12 @@ export const ContractInteraction = () => {
     }
   });
 
+
   const { data: createData, writeAsync: createBorrowRequest, isLoading:  createisLoading } = useScaffoldContractWrite({
     contractName: "NFTLendingBorrowing",
     functionName: "createBorrowRequest",
     args: [
-      nftContractAddress,
+      userNftContractAddress,
       BigNumber.from(nftTokenId || 0),
       BigNumber.from(requestedAmount || 0).mul(BigNumber.from(10).pow(18)),
       BigNumber.from(paymentTime || 0).mul(BigNumber.from(60).pow(2).mul(24)),
@@ -111,7 +149,7 @@ export const ContractInteraction = () => {
     contractName: "NFTLendingBorrowing",
     functionName: "cancelBorrowRequest",
     args: [
-      BigNumber.from(requestId),
+      BigNumber.from(cancelRequestId),
     ]
   });
 
@@ -134,6 +172,7 @@ export const ContractInteraction = () => {
     ]
   });
 
+
   const { writeAsync: paybackBorrowRequest, isLoading: paybackisLoading } = useScaffoldContractWrite({
     contractName: "NFTLendingBorrowing",
     functionName: "payback",
@@ -150,6 +189,16 @@ export const ContractInteraction = () => {
   })
 
 
+  const  { writeAsync: approveNFT, isLoading: approveisLoading} = useScaffoldContractWrite({
+    contractName: "NFT",
+    functionName: "setApprovalForAll",
+    args: [
+      NFTBorrowingLendingContractAddress,
+      true,
+    ],
+  })
+
+
   return (
     <div className="flex bg-base-300 relative pb-10">
       <DiamondIcon className="absolute top-24" />
@@ -157,17 +206,30 @@ export const ContractInteraction = () => {
       <HareIcon className="absolute right-0 bottom-24" />
       
       <div className="flex flex-col w-full mx-5 sm:mx-8 2xl:mx-20">
-      <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
+      <div className="flex flex-row items-center justify-center">
+      <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
           <div className="">
-          <span className="text-4xl sm:text-3xl text-black">Mint Your Test NFT</span>
+          <span className="flex text-4xl sm:text-3xl font-bold text-black justify-center">Claim Your NFT</span>
               <button
-                className={`btn btn-primary rounded-full capitalize font-bold font-white mt-8 w-48 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${mintisLoading ? "loading" : ""
+                className={`btn btn-primary rounded-full capitalize font-bold font-white mt-4 w-48 flex items-center gap-1 hover:gap-2 transition-all${mintisLoading ? "loading" : ""
                   }`}
                 onClick={mintNFT}
               >
                 {!mintisLoading && (
                   <>
                     Mint Your Test NFT
+                  </>
+                )}
+              </button>
+              <span className="flex text-4xl sm:text-3xl mt-4 font-bold text-black justify-center">Approve Your NFT</span>
+              <button
+                className={`btn btn-primary rounded-full capitalize font-bold font-white mt-4 w-58 flex items-center gap-1 hover:gap-2 transition-all ${approveisLoading ? "loading" : ""
+                  }`}
+                onClick={approveNFT}
+              >
+                {!approveisLoading && (
+                  <>
+                    Approve NFT Contract
                   </>
                 )}
               </button>
@@ -180,18 +242,45 @@ export const ContractInteraction = () => {
               </div>
             ) : (<></>)}
           </div>
+          <div className="mt-4 flex gap-2 items-start">
+            {tokenId ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-lg font-bai-jamjuree text-black">Your NFT Contract Address</span>
+                <span className="text-2xl font-bai-jamjuree text-black">{nftContractAddress}</span>
+              </div>
+            ) : (<></>)}
           </div>
+          </div>
+          <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+          <span className="flex text-4xl sm:text-3xl font-bold text-black justify-center">Your Borrow ID's</span>
+          <div className="mt-4 flex gap-2 items-start">
+          <div className="flex gap-1">
+            {personBorrowIds.length > 0 && personBorrowIds.map((id: any) => (
+              <span className="text-2xl font-bai-jamjuree text-black">{id}, </span>
+          ))}
+          </div>
+          </div>
+          <span className="flex text-4xl sm:text-3xl font-bold text-black justify-center">Your Request ID's</span>
+          <div className="mt-4 flex gap-2 items-start">
+          <div className="flex gap-1">
+            {personRequestIds.length > 0 && personRequestIds.map((id: any) => (
+              <span className="text-2xl font-bai-jamjuree text-black">{id}, </span>
+          ))}
+          </div>
+          </div>
+          </div>
+          </div>
+          <div className="flex flex-row items-center justify-center">
+        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
 
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
-
-          <span className="text-4xl sm:text-6xl text-black">Create A New Borrow Request</span>
+          <span className="text-4xl sm:text-4xl font-bold text-black">Create A New Borrow Request</span>
 
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
             <input
               type="text"
               placeholder="NFT Contract Address"
               className="input font-bai-jamjuree w-full px-5 bg-[url('/assets/gradient-bg.png')] bg-[length:100%_100%] border border-primary text-lg sm:text-2xl placeholder-white uppercase"
-              onChange={e => setNftContractAddress(e.target.value)}
+              onChange={e => setUserNftContractAddress(e.target.value)}
             />
           </div>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
@@ -218,10 +307,10 @@ export const ContractInteraction = () => {
               onChange={e => setPaymentTime(Number(e.target.value))}
             />
           </div>
-          <div className="flex rounded-full border border-primary p-1 flex-shrink-0">
-            <div className="flex rounded-full border-2 border-primary p-1">
+          <div className="flex rounded-full p-1 flex-shrink-0">
+            <div className="flex rounded-full  p-1">
               <button
-                className={`btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${createisLoading ? "loading" : ""
+                className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${createisLoading ? "loading" : ""
                   }`}
                 onClick={createBorrowRequest}
               >
@@ -237,28 +326,29 @@ export const ContractInteraction = () => {
           <div className="mt-4 flex gap-2 items-start">
             {requestId ? (
               <div className="flex flex-col gap-1">
-                <span className="text-lg font-bai-jamjuree text-white">Request ID</span>
-                <span className="text-2xl font-bai-jamjuree text-white">{requestId}</span>
+                <span className="text-lg font-bai-jamjuree text-black">Request ID</span>
+                <span className="text-2xl font-bai-jamjuree text-black">{requestId}</span>
               </div>
             ) : (<></>)}
           </div>
         </div>
+        </div>
+        <div className="flex flex-row items-center justify-center">
 
-
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
-          <span className="text-4xl sm:text-6xl text-black">Cancel A Borrow Request</span>
+        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+          <span className="text-4xl sm:text-4xl font-bold text-black">Cancel A Borrow Request</span>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
             <input
               type="number"
               placeholder="Your Request ID"
               className="input font-bai-jamjuree w-full px-5 bg-[url('/assets/gradient-bg.png')] bg-[length:100%_100%] border border-primary text-lg sm:text-2xl placeholder-white uppercase"
-              onChange={e => setRequestId(Number(e.target.value))}
+              onChange={e => setCancelRequestId(Number(e.target.value))}
             />
           </div>
-          <div className="flex rounded-full border border-primary p-1 flex-shrink-0">
-            <div className="flex rounded-full border-2 border-primary p-1">
+          <div className="flex rounded-full p-1 flex-shrink-0">
+            <div className="flex rounded-full  p-1">
               <button
-                className={`btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${cancelisLoading ? "loading" : ""
+                className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${cancelisLoading ? "loading" : ""
                   }`}
                 onClick={cancelBorrowRequest}
               >
@@ -272,8 +362,8 @@ export const ContractInteraction = () => {
           </div>
           
         </div>
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
-          <span className="text-4xl sm:text-6xl text-black">Lend A Borrow Request</span>
+        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+          <span className="text-4xl sm:text-4xl font-bold text-black">Lend A Borrow Request</span>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
             <input
               type="number"
@@ -282,10 +372,10 @@ export const ContractInteraction = () => {
               onChange={e => setLendRequestId(Number(e.target.value))}
             />
           </div>
-          <div className="flex rounded-full border border-primary p-1 flex-shrink-0">
-            <div className="flex rounded-full border-2 border-primary p-1">
+          <div className="flex rounded-full p-1 flex-shrink-0">
+            <div className="flex rounded-full  p-1">
               <button
-                className={`btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${lendisLoading ? "loading" : ""
+                className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${lendisLoading ? "loading" : ""
                   }`}
                 onClick={lendBorrowRequest}
               >
@@ -300,14 +390,16 @@ export const ContractInteraction = () => {
           <div className="mt-4 flex gap-2 items-start">
             {lendBorrowId ? (
               <div className="flex flex-col gap-1">
-                <span className="text-lg font-bai-jamjuree text-white">Borrows ID</span>
-                <span className="text-2xl font-bai-jamjuree text-white">{lendBorrowId}</span>
+                <span className="text-lg font-bai-jamjuree text-black">Borrows ID</span>
+                <span className="text-2xl font-bai-jamjuree text-black">{lendBorrowId}</span>
               </div>
             ) : (<></>)}
           </div>
         </div>
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
-          <span className="text-4xl sm:text-6xl text-black">Liqudiate A Borrow Request</span>
+        </div>
+        <div className="flex flex-row items-center justify-center">
+        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+          <span className="text-4xl sm:text-4xl font-bold text-black">Liqudiate A Borrow Request</span>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
             <input
               type="number"
@@ -316,10 +408,10 @@ export const ContractInteraction = () => {
               onChange={e => setLiqudiateBorrowId(Number(e.target.value))}
             />
           </div>
-          <div className="flex rounded-full border border-primary p-1 flex-shrink-0">
-            <div className="flex rounded-full border-2 border-primary p-1">
+          <div className="flex rounded-full p-1 flex-shrink-0">
+            <div className="flex rounded-full  p-1">
               <button
-                className={`btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${liquidateisLoading ? "loading" : ""
+                className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${liquidateisLoading ? "loading" : ""
                   }`}
                 onClick={liquidateBorrowRequest}
               >
@@ -331,10 +423,10 @@ export const ContractInteraction = () => {
               </button>
             </div>
           </div>
-          
         </div>
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
-          <span className="text-4xl sm:text-6xl text-black">Payback A Borrow Request</span>
+        
+        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+          <span className="text-4xl sm:text-4xl font-bold text-black">Payback A Borrow Request</span>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
             <input
               type="number"
@@ -343,10 +435,10 @@ export const ContractInteraction = () => {
               onChange={e => wrapSetPaybackId(Number(e.target.value))}
             />
           </div>
-          <div className="flex rounded-full border border-primary p-1 flex-shrink-0">
-            <div className="flex rounded-full border-2 border-primary p-1">
+          <div className="flex rounded-full p-1 flex-shrink-0">
+            <div className="flex rounded-full  p-1">
               <button
-                className={`btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${paybackisLoading ? "loading" : ""
+                className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${paybackisLoading ? "loading" : ""
                   }`}
                 onClick={paybackBorrowRequest}
               >
@@ -358,7 +450,7 @@ export const ContractInteraction = () => {
               </button>
             </div>
           </div>
-          
+          </div>
         </div>
       </div>
     </div>
