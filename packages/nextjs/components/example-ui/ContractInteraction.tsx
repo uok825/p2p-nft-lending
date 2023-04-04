@@ -3,7 +3,7 @@ import { CopyIcon } from "./assets/CopyIcon";
 import { DiamondIcon } from "./assets/DiamondIcon";
 import { HareIcon } from "./assets/HareIcon";
 import { ArrowSmallRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useScaffoldContractRead, useScaffoldContractWrite, useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldContractRead, useScaffoldContractWrite, useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
 import { BigNumber } from "ethers";
 import { useAccount, useContractWrite } from "wagmi";
 import { getContractNames } from "~~/utils/scaffold-eth/contractNames";
@@ -11,7 +11,6 @@ import { getContractNames } from "~~/utils/scaffold-eth/contractNames";
 export const ContractInteraction = () => {
 
   const startTime = Math.floor(Date.now() / 1000);
-
   const [userNftContractAddress, setUserNftContractAddress] = useState("");
   const [nftTokenId, setNftTokenId] = useState(0);
   const [requestedAmount, setRequestedAmount] = useState(0);
@@ -29,8 +28,10 @@ export const ContractInteraction = () => {
   const [personBorrowIds, setPersonBorrowIds] = useState([]);
   const [personRequestIds, setPersonRequestIds] = useState([]);
   const {address, isConnected} = useAccount();
-  const NFTBorrowingLendingContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-  const nftContractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+  const NFTLendingBorrowingContractInfo = useDeployedContractInfo("NFTLendingBorrowing");
+  const NFTContractInfo = useDeployedContractInfo("NFT");
+  const NFTLendingBorrowingContractAddress = NFTLendingBorrowingContractInfo?.data?.address;
+  const NFTContractAddress = NFTContractInfo?.data?.address;
 
   const wrapSetPaybackId = (id: any) => {
     setPaybackBorrowId(id);
@@ -193,7 +194,7 @@ export const ContractInteraction = () => {
     contractName: "NFT",
     functionName: "setApprovalForAll",
     args: [
-      NFTBorrowingLendingContractAddress,
+      NFTLendingBorrowingContractAddress,
       true,
     ],
   })
@@ -207,7 +208,7 @@ export const ContractInteraction = () => {
       
       <div className="flex flex-col w-full mx-5 sm:mx-8 2xl:mx-20">
       <div className="flex flex-row items-center justify-center">
-      <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+      <div className="flex-1 h-96 w-64 flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
           <div className="">
           <span className="flex text-4xl sm:text-3xl font-bold text-black justify-center">Claim Your NFT</span>
               <button
@@ -246,12 +247,12 @@ export const ContractInteraction = () => {
             {tokenId ? (
               <div className="flex flex-col gap-1">
                 <span className="text-lg font-bai-jamjuree text-black">Your NFT Contract Address</span>
-                <span className="text-2xl font-bai-jamjuree text-black">{nftContractAddress}</span>
+                <span className="text-2xl font-bai-jamjuree text-black">{NFTContractAddress}</span>
               </div>
             ) : (<></>)}
           </div>
           </div>
-          <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+          <div className="flex-1 h-64 w-32 flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
           <span className="flex text-4xl sm:text-3xl font-bold text-black justify-center">Your Borrow ID's</span>
           <div className="mt-4 flex gap-2 items-start">
           <div className="flex gap-1">
@@ -271,7 +272,7 @@ export const ContractInteraction = () => {
           </div>
           </div>
           <div className="flex flex-row items-center justify-center">
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
 
           <span className="text-4xl sm:text-4xl font-bold text-black">Create A New Borrow Request</span>
 
@@ -334,8 +335,7 @@ export const ContractInteraction = () => {
         </div>
         </div>
         <div className="flex flex-row items-center justify-center">
-
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+        <div className="flex-1 h-64 w-64 flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
           <span className="text-4xl sm:text-4xl font-bold text-black">Cancel A Borrow Request</span>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
             <input
@@ -362,7 +362,7 @@ export const ContractInteraction = () => {
           </div>
           
         </div>
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
+        <div className="flex-1 h-64 w-64 flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
           <span className="text-4xl sm:text-4xl font-bold text-black">Lend A Borrow Request</span>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
             <input

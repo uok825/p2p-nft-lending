@@ -14,6 +14,7 @@ contract NFTLendingBorrowing is ReentrancyGuard {
     // Structs, States and Mappings //
 
     struct Request {
+        uint256 requestId;
         address nftContract;
         address borrower;
         uint256 nftTokenId;
@@ -100,6 +101,7 @@ contract NFTLendingBorrowing is ReentrancyGuard {
         require(nft.isApprovedForAll(msg.sender, address(this)), "You need to approve this contract to transfer your NFT");
 
         Request memory newRequest = Request({
+            requestId: lastRequestId,
             nftContract: _nftContract,
             borrower: msg.sender,
             nftTokenId: _nftTokenId,
@@ -212,28 +214,21 @@ contract NFTLendingBorrowing is ReentrancyGuard {
         
         require(req.isValid, "This request is not valid");
 
-        // transfer nft
-
         IERC721 nft = IERC721(req.nftContract);
         nft.transferFrom(address(this), req.borrower, req.nftTokenId);
 
-        // payback total
 
         (bool success, ) = borrow.lender.call{value: total}("");
         require(success, "Transfer failed.");
 
-        // refund
-
         (bool success2, ) = msg.sender.call{value: msg.value - total}("");
         require(success2, "Transfer failed.");
 
-        // invalidate request
 
         borrow.isPaid = true;
         req.isValid = false;
     }
-
-    // get interest rate
+    
 
     function amountToPay(uint256 _borrowId) public view returns (uint256) {
         Borrow memory borrow = borrows[_borrowId];
@@ -254,12 +249,15 @@ contract NFTLendingBorrowing is ReentrancyGuard {
         
         return req.requestedAmount + interest;
     }
+
+
     function getUserRequestCount(address _user) public view returns (uint256) {
         return addressToRequestCount[_user];
     }
     function getUserBorrowCount(address _user) public view returns (uint256) {
         return addressToBorrowCount[_user];
     }
+
 
     function getUserRequestIds(address _user) public view returns (uint256[] memory) {
         uint256[] memory ids = new uint256[](addressToRequestCount[_user]);
@@ -274,5 +272,12 @@ contract NFTLendingBorrowing is ReentrancyGuard {
             ids[i] = addressToBorrowIds[_user][i];
         }
         return ids;
+    }
+    function getRequestDetails() public view returns (Request[] memory) {
+        Request[] memory requestDetails = new Request[](lastRequestId);
+        for (uint256 i = 0; i <= lastRequestId; i++) {
+            requestDetails[i] = requests[i];
+        }
+        return requestDetails;
     }
 }
