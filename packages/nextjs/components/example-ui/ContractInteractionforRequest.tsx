@@ -52,7 +52,7 @@ export const ContractInteractionforRequest = () => {
       setRequestNftContractAddress(allRequestDetails.map((getDetails: any) => getDetails.nftContract.toString()) || []);
       setRequestNftTokenId(allRequestDetails.map((getDetails: any) => getDetails.nftTokenId.toString()) || []);
       setIsValid(allRequestDetails.map((getDetails: any) => getDetails.isValid) || []);
-      setIsLent(allRequestDetails.map((getDetails: any) => getDetails.isLent) || []);
+      setIsLent(allRequestDetails.map((getDetails: any) => getDetails.isLent) || []); 
     },
   });
 
@@ -69,6 +69,7 @@ export const ContractInteractionforRequest = () => {
   return (
     <div className="flex bg-base-300 relative pb-10">
       <DiamondIcon className="absolute top-24" />
+      <DiamondIcon className="absolute bottom-24" />
       <CopyIcon className="absolute bottom-0 left-36" />
       <HareIcon className="absolute right-0 bottom-24" />
 
@@ -107,7 +108,7 @@ export const ContractInteractionforRequest = () => {
                     <div>
                       <a href={`https://etherscan.io/address/${requestNftContractAddress[index]}`} target="_blank" rel="noopener noreferrer">
                         <span className="text-2xl font-bai-jamjuree text-black">
-                          NFT Contract: {requestNftContractAddress[index].substring(0, 12)}...
+                          NFT Contract: {requestNftContractAddress[index]?.substring(0, 12)}...
                         </span>
                       </a>
                     </div>

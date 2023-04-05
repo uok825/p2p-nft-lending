@@ -106,11 +106,16 @@ export const ContractInteraction = () => {
     eventName: "RequestCreated",
     listener: (
       requestId: any,
-      ...args: any[]
+      nftContractAddress: string,
+      borrower: string,
+      requestedAmount: BigNumber,
+      paymentTime: BigNumber,
+      createdAt: BigNumber,
     ) => {
       setRequestId(requestId.toString());
     }
   });
+  
 
 
   useScaffoldEventSubscriber({
@@ -118,7 +123,9 @@ export const ContractInteraction = () => {
     eventName: "RequestLent",
     listener: (
       borrowsId: any,
-      ...args: any[]
+      requestId: any,
+      lender: string,
+      lentAt: BigNumber,
     ) => {
       setLendBorrowId(borrowsId.toString());
     }
@@ -142,7 +149,7 @@ export const ContractInteraction = () => {
     args: [
       userNftContractAddress,
       BigNumber.from(nftTokenId || 0),
-      BigNumber.from(requestedAmount || 0).mul(BigNumber.from(10).pow(18)),
+      BigNumber.from(requestedAmount * 1000 || 0).mul(BigNumber.from(10).pow(18).div(1000)),
       BigNumber.from(paymentTime || 0).mul(BigNumber.from(60).pow(2).mul(24)),
     ]
   });
@@ -216,14 +223,15 @@ export const ContractInteraction = () => {
   return (
     <div className="flex bg-base-300 relative pb-10">
       <DiamondIcon className="absolute top-24" />
+      <CopyIcon className="absolute top-48 right-20" />
       <CopyIcon className="absolute bottom-0 left-36" />
       <HareIcon className="absolute right-0 bottom-24" />
 
       <div className="flex flex-col w-full mx-5 sm:mx-8 2xl:mx-20">
         <div className="flex flex-row items-center justify-around gap-8">
-          <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
-            <div className="flex flex-row items-center justify-between">
-              <div className="flex flex-col w-30 h-30 items-center justify-around">
+          <div className="flex-1 flex-none w-72 h-40 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+            <div className="flex flex-row items-center justify-around">
+              <div className="flex flex-col items-center justify-around">
                 <h1 className="text-2xl sm:text-3xl font-bold text-black mb-4">Claim NFT</h1>
 
                 <button className="btn btn-primary rounded-full capitalize font-bold text-white w-48 flex items-center justify-center gap-1 hover:gap-2 transition-all loading:$mintisLoading$"
@@ -247,9 +255,9 @@ export const ContractInteraction = () => {
               ) : (<></>)}
             </div>
           </div>
-          <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
-          <div className="flex flex-row justify-between">
-          <div className="flex flex-col w-30 h-30 items-center justify-center">
+          <div className="flex-1 flex-none w-72 h-40 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+          <div className="flex flex-row justify-around">
+          <div className="flex flex-col items-center justify-center">
                 <h1 className="text-2xl sm:text-3xl font-bold text-black mb-4"> Approve Contract </h1>
                 <button className="btn btn-primary rounded-full capitalize font-bold text-white w-58 flex items-center justify-center gap-1 hover:gap-2 transition-all loading:$approveisLoading$"
                   onClick={approveNFT}>
@@ -258,8 +266,8 @@ export const ContractInteraction = () => {
               </div>
               </div>
               </div>
-          <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
-            <div className="flex flex-row justify-between">
+          <div className="flex-1 flex-none w-72 h-40 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+            <div className="flex flex-row justify-around">
               <div >
                 <h2 className="text-2xl sm:text-3xl font-bold text-black mb-4">Your Borrow ID's </h2>
                 <div className="flex flex-row gap-1">
@@ -273,8 +281,8 @@ export const ContractInteraction = () => {
               </div>
               </div>
           </div>
-              <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
-              <div className="flex flex-col w-30 h-30 justify-around">
+              <div className="flex-1 flex-none w-72 h-40 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+              <div className="flex flex-col  justify-around">
                 <h2 className="text-2xl sm:text-3xl font-bold text-black mb-4">Your Request ID's</h2>
                 <div className="flex flex-row gap-1">
                   {personRequestIds.length > 0 && personRequestIds.map((id: any) => (
@@ -312,7 +320,8 @@ export const ContractInteraction = () => {
             <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
               <input
                 type="number"
-                placeholder="Requested Amount"
+                min="1"
+                placeholder="Requested Amount (only Integer)"
                 className="input font-bai-jamjuree w-full px-5 bg-[url('/assets/gradient-bg.png')] bg-[length:100%_100%] border border-primary text-lg sm:text-2xl placeholder-white uppercase"
                 onChange={e => setRequestedAmount(Number(e.target.value))}
               />
@@ -320,7 +329,8 @@ export const ContractInteraction = () => {
             <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
               <input
                 type="number"
-                placeholder="Payment Time"
+                min="1"
+                placeholder="Payment Time (only Integer)"
                 className="input font-bai-jamjuree w-full px-5 bg-[url('/assets/gradient-bg.png')] bg-[length:100%_100%] border border-primary text-lg sm:text-2xl placeholder-white uppercase"
                 onChange={e => setPaymentTime(Number(e.target.value))}
               />
