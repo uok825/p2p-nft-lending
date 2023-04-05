@@ -6,7 +6,7 @@ const PlatformUI: NextPage = () => {
   return (
     <>
       <Head>
-        <title>NFT Borrowing Lending</title>
+        <title>NFT Lending Borrowing</title>
         <meta name="description" content="Created with 🏗 scaffold-eth" />
         {/* We are importing the font this way to lighten the size of SE2. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

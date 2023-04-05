@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CopyIcon } from "./assets/CopyIcon";
 import { DiamondIcon } from "./assets/DiamondIcon";
 import { HareIcon } from "./assets/HareIcon";
-import { ArrowSmallRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ArrowSmallRightIcon, NoSymbolIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useDeployedContractInfo, useScaffoldContractRead, useScaffoldContractWrite, useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
 import { BigNumber } from "ethers";
 import { useAccount, useContractWrite } from "wagmi";
@@ -40,8 +40,8 @@ export const ContractInteraction = () => {
   }
 
   const shortenAddress = () => {
-    const prefixLength = Math.floor(10 / 2);
-    const suffixLength = 10 - prefixLength;
+    const prefixLength = 4;
+    const suffixLength = 2;
     const prefix = NFTContractAddress?.slice(0, prefixLength);
     const suffix = NFTContractAddress?.slice(-suffixLength);
     return `${prefix}...${suffix}`;
@@ -142,7 +142,7 @@ export const ContractInteraction = () => {
     args: [
       userNftContractAddress,
       BigNumber.from(nftTokenId || 0),
-      BigNumber.from(requestedAmount || 0).toString(),
+      BigNumber.from(requestedAmount || 0).mul(BigNumber.from(10).pow(18)),
       BigNumber.from(paymentTime || 0).mul(BigNumber.from(60).pow(2).mul(24)),
     ]
   });
@@ -220,46 +220,48 @@ export const ContractInteraction = () => {
       <HareIcon className="absolute right-0 bottom-24" />
 
       <div className="flex flex-col w-full mx-5 sm:mx-8 2xl:mx-20">
-        <div className="flex flex-row items-center justify-center gap-8">
-          <div className="flex-1 w-80 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+        <div className="flex flex-row items-center justify-around gap-8">
+          <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
             <div className="flex flex-row items-center justify-between">
-              <div className="flex flex-col items-center justify-center">
-                <h1 className="text-2xl sm:text-3xl font-bold text-black mb-4">Claim Your NFT</h1>
+              <div className="flex flex-col w-30 h-30 items-center justify-around">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black mb-4">Claim NFT</h1>
 
                 <button className="btn btn-primary rounded-full capitalize font-bold text-white w-48 flex items-center justify-center gap-1 hover:gap-2 transition-all loading:$mintisLoading$"
                   onClick={mintNFT}>
-                  {!mintisLoading && "Mint Your Test NFT"}
-                </button>
-              </div>
-              <div className="flex flex-col items-center justify-center">
-                <h2 className="text-2xl sm:text-3xl font-bold text-black mb-4">Approve Your NFT</h2>
-
-                <button className="btn btn-primary rounded-full capitalize font-bold text-white w-58 flex items-center justify-center gap-1 hover:gap-2 transition-all loading:$approveisLoading$"
-                  onClick={approveNFT}>
-                  {!approveisLoading && "Approve NFT Contract"}
+                  {!mintisLoading && "Mint Test NFT"}
                 </button>
               </div>
             </div>
-
             <div className="mt-4 flex gap-2 items-start">
               {tokenId ? (
                 <div className="flex flex-col gap-1">
-                  <span className="text-1xl font-bai-jamjuree text-black">Your NFT Token ID: {tokenId}</span>
+                  <span className="text-1xl font-bai-jamjuree text-black">NFT Token ID: {tokenId}</span>
                 </div>
               ) : (<></>)}
             </div>
             <div className="mt-4 flex gap-2 items-start">
               {tokenId ? (
                 <div className="flex flex-col gap-1">
-                  <span className="text-1xl font-bai-jamjuree text-black cursor-pointer" onClick={handleCopyAddress}>Your NFT Contract Address: {shortenAddress()}</span>
+                  <span className="text-1xl font-bai-jamjuree text-black cursor-pointer" onClick={handleCopyAddress}>NFT Contract Address: {shortenAddress()} (click to copy)</span>
                 </div>
               ) : (<></>)}
             </div>
           </div>
-          <div className="flex-1 w-80 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
-            <div className="flex flex-col justify-between h-full">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-black mb-4">Your Borrow ID's</h2>
+          <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+          <div className="flex flex-row justify-between">
+          <div className="flex flex-col w-30 h-30 items-center justify-center">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black mb-4"> Approve Contract </h1>
+                <button className="btn btn-primary rounded-full capitalize font-bold text-white w-58 flex items-center justify-center gap-1 hover:gap-2 transition-all loading:$approveisLoading$"
+                  onClick={approveNFT}>
+                  {!approveisLoading && "Approve"}
+                </button>
+              </div>
+              </div>
+              </div>
+          <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+            <div className="flex flex-row justify-between">
+              <div >
+                <h2 className="text-2xl sm:text-3xl font-bold text-black mb-4">Your Borrow ID's </h2>
                 <div className="flex flex-row gap-1">
                   {personBorrowIds.length > 0 && personBorrowIds.map((id: any) => (
                     <span key={id} className="text-2xl font-bai-jamjuree text-black">{id}, </span>
@@ -269,7 +271,10 @@ export const ContractInteraction = () => {
                   )}
                 </div>
               </div>
-              <div>
+              </div>
+          </div>
+              <div className="flex-1 flex-none w-150 h-38 flex-col bg-base-200 mt-6 items-start opacity-80 items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3">
+              <div className="flex flex-col w-30 h-30 justify-around">
                 <h2 className="text-2xl sm:text-3xl font-bold text-black mb-4">Your Request ID's</h2>
                 <div className="flex flex-row gap-1">
                   {personRequestIds.length > 0 && personRequestIds.map((id: any) => (
@@ -279,12 +284,11 @@ export const ContractInteraction = () => {
                     <span className="text-lg font-bai-jamjuree text-gray-500">No request ID's found.</span>
                   )}
                 </div>
-              </div>
+                </div>
             </div>
-          </div>
 
         </div>
-        <div className="flex flex-row items-center justify-center">
+        <div className="flex flex-row items-center justify-around">
           <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
 
             <span className="text-3xl sm:text-3xl font-bold text-black">Create A New Borrow Request</span>
@@ -330,18 +334,17 @@ export const ContractInteraction = () => {
                 >
                   {!createisLoading && (
                     <>
-                      Send <ArrowSmallRightIcon className="w-3 h-3 mt-0.5" />
+                      Create
                     </>
                   )}
                 </button>
               </div>
             </div>
 
-            <div className="mt-2 flex gap-2 items-start">
+            <div className="mt-1 flex gap-2 items-start">
               {requestId ? (
                 <div className="flex flex-col gap-1">
-                  <span className="text-lg font-bai-jamjuree text-black">Request ID</span>
-                  <span className="text-2xl font-bai-jamjuree text-black">{requestId}</span>
+                  <span className="text-lg font-bai-jamjuree text-black">Request ID: {requestId}</span>
                 </div>
               ) : (<></>)}
             </div>
@@ -367,7 +370,7 @@ export const ContractInteraction = () => {
                 >
                   {!cancelisLoading && (
                     <>
-                      Send <ArrowSmallRightIcon className="w-3 h-3 mt-0.5" />
+                      Cancel
                     </>
                   )}
                 </button>
@@ -393,7 +396,7 @@ export const ContractInteraction = () => {
                 >
                   {!lendisLoading && (
                     <>
-                      Send <ArrowSmallRightIcon className="w-3 h-3 mt-0.5" />
+                      Lend
                     </>
                   )}
                 </button>
@@ -427,7 +430,7 @@ export const ContractInteraction = () => {
                 >
                   {!liquidateisLoading && (
                     <>
-                      Send <ArrowSmallRightIcon className="w-3 h-3 mt-0.5" />
+                      Liq
                     </>
                   )}
                 </button>
@@ -454,7 +457,7 @@ export const ContractInteraction = () => {
                 >
                   {!paybackisLoading && (
                     <>
-                      Send <ArrowSmallRightIcon className="w-3 h-3 mt-0.5" />
+                      PayBack
                     </>
                   )}
                 </button>

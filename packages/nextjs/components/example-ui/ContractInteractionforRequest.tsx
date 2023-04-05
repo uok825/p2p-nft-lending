@@ -75,13 +75,12 @@ export const ContractInteractionforRequest = () => {
       <div className="flex flex-col w-full mx-5 sm:mx-8 2xl:mx-20">
         <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
           <span className="text-4xl sm:text-4xl font-bold text-black">Requests</span>
-          <div className="flex flex-wrap">
+          <div className="flex flex-wrap justify-around">
             {requestId.length > 0 &&
               requestId.map((id: any, index: number) => (
                 <div
                   key={index}
-                  className="flex-1 w-80 h-38 flex-row mt-6 items-start items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3"
-                  style={{ width: "25%", minWidth: "300px", margin: "1rem" }}
+                  className="flex-1 flex-none w-80 h-38 flex-row mt-6 items-start items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3"
                 >
                   <div className={`request-status ${isValid[index] && !isLent[index] ? 'text-green-500 rounded-2xl shadow-lg border-2 border-primary border-green-500 bg-inherit px-1' : isLent[index] ? 'text-blue-500 rounded-2xl shadow-lg border-2 border-blue-500 bg-inherit px-1' : 'text-red-700 rounded-2xl shadow-lg border-2 border-primary border-red-700 bg-inherit px-1'}`} style={{ width: "80px", textAlign: "center" }}>
                     {isLent[index] ? 'Lent' : isValid[index] ? 'Active' : 'Cancelled'}

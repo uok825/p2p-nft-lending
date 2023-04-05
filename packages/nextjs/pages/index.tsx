@@ -7,7 +7,7 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>NFT Borrowing Lending</title>
+        <title>NFT Lending Borrowing</title>
         <meta name="description" content="Created with 🏗 scaffold-eth" />
       </Head>
 
