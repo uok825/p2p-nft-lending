@@ -10,90 +10,129 @@ import { getContractNames } from "~~/utils/scaffold-eth/contractNames";
 
 export const ContractInteractionforRequest = () => {
 
-  const startTime = Math.floor(Date.now() / 1000);
-
-  const [userNftContractAddress, setUserNftContractAddress] = useState("");
-  const [nftTokenId, setNftTokenId] = useState(0);
-  const [requestedAmount, setRequestedAmount] = useState(0);
-  const [paymentTime, setPaymentTime] = useState(0);
+  const [selectedRequestId, setSelectedRequestId] = useState(0);
+  const [requestNftContractAddress, setRequestNftContractAddress] = useState([]);
+  const [requestNftTokenId, setRequestNftTokenId] = useState([]);
+  const [requestedAmount, setRequestedAmount] = useState([]);
+  const [requestPaymentTime, setRequestPaymentTime] = useState([]);
   const [requestId, setRequestId] = useState([]);
-  const [cancelRequestId, setCancelRequestId] = useState(0);
-  const [lendRequestId, setLendRequestId] = useState(0);
-  const [valueToLend, setValueToLend] = useState("");
   const [lendBorrowId, setLendBorrowId] = useState(0);
-  const [liqudiateBorrowId, setLiqudiateBorrowId] = useState(0);
-  const [paybackBorrowId, setPaybackBorrowId] = useState(0);
-  const [valueToPayback, setValueToPayback] = useState("");
-  const [date, setDate] = useState(startTime);
-  const [tokenId, setTokenId] = useState(0);
-  const [personBorrowIds, setPersonBorrowIds] = useState([]);
-  const [personRequestIds, setPersonRequestIds] = useState([]);
-  const {address, isConnected} = useAccount();
-
-  const [allRequestIds, setAllRequestIds] = useState([]);
+  const [valueToLend, setValueToLend] = useState([]);
+  const { address, isConnected } = useAccount();
   const NFTLendingBorrowingContractInfo = useDeployedContractInfo("NFTLendingBorrowing");
   const NFTContractInfo = useDeployedContractInfo("NFT");
   const NFTLendingBorrowingContractAddress = NFTLendingBorrowingContractInfo?.data?.address;
   const NFTContractAddress = NFTContractInfo?.data?.address;
 
-  const wrapSetPaybackId = (id: any) => {
-    setPaybackBorrowId(id);
-    let newDate = Math.floor(Date.now() / 1000) + 90;
-    setDate(newDate);
+  const wrapSetLendId = (id: any) => {
+    setSelectedRequestId(id);
+    setLendBorrowId(id);
   }
 
 
   useScaffoldContractRead({
     contractName: "NFTLendingBorrowing",
     functionName: "requests",
-    args: [(allRequestIds[0])],
+    args: [BigNumber.from(selectedRequestId || 0)],
     onSuccess(data: any) {
-        setTokenId(data.nftTokenId.toString());
-        setPaymentTime(data.paymentTime.toString());
-        setValueToLend(data.requestedAmount.div(BigNumber.from(10).pow(18)).toString());
+      setValueToLend(data.requestedAmount.div(BigNumber.from(10).pow(18)).toString());
     },
   });
 
-
-  useScaffoldContractRead({
-    contractName: "NFTLendingBorrowing",
-    functionName: "amountToPayAt",
-    args: [BigNumber.from(paybackBorrowId), BigNumber.from(date)],
-    onSuccess(data: any) {
-      console.log(data.toString());
-      setValueToPayback((Number(data.toString()) / 10**18).toString());
-    },
-
-  });
-
+  
   useScaffoldContractRead({
     contractName: "NFTLendingBorrowing",
     functionName: "getRequestDetails",
     onSuccess(allRequestDetails: any) {
-      setRequestId(allRequestDetails.requestId?.map((id: any) => id.toString()) || []);
-      setRequestedAmount(allRequestDetails.requestedAmount?.map((amount: any) => amount.div(BigNumber.from(10).pow(18)).toString()) || []);
-      setPaymentTime(allRequestDetails.paymentTime?.map((time: any) => time.toString()) || []);
+      setRequestId(allRequestDetails.map((getDetails: any) => getDetails.requestId.toString()) || []);
+      setRequestedAmount(allRequestDetails.map((getDetails: any) => getDetails.requestedAmount.div(BigNumber.from(10).pow(18)).toString()) || []);
+      setRequestPaymentTime(allRequestDetails.map((getDetails: any) => getDetails.paymentTime.div(BigNumber.from(60).pow(2).mul(24)).toString()) || []);
+      setRequestNftContractAddress(allRequestDetails.map((getDetails: any) => getDetails.nftContract.toString()) || []);
+      setRequestNftTokenId(allRequestDetails.map((getDetails: any) => getDetails.nftTokenId.toString()) || []);
+      
     },
   });
 
+  
+    const { writeAsync: lendRequest, isLoading: lendisLoading} = useScaffoldContractWrite({
+      contractName: "NFTLendingBorrowing",
+      functionName: "lend",
+      args: [
+        BigNumber.from(lendBorrowId),
+      ],
+      value: valueToLend.toString(),
+    });
+  
   return (
     <div className="flex bg-base-300 relative pb-10">
       <DiamondIcon className="absolute top-24" />
       <CopyIcon className="absolute bottom-0 left-36" />
       <HareIcon className="absolute right-0 bottom-24" />
-      
+
       <div className="flex flex-col w-full mx-5 sm:mx-8 2xl:mx-20">
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary w-128">
-          <span className="text-4xl sm:text-4xl font-bold text-black">Request</span>
-          <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
-                        {requestId.length > 0 && requestId.map((id: any) => (
-              <span className="text-2xl font-bai-jamjuree text-black">{id}, </span>
-          ))}
+        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
+          <span className="text-4xl sm:text-4xl font-bold text-black">Requests</span>
+          <div className="flex flex-wrap">
+            {requestId.length > 0 &&
+              requestId.map((id: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex-1 w-80 h-38 flex-row mt-6 items-start items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3"
+                  style={{ width: "25%", minWidth: "300px", margin: "1rem" }}
+                >
+                  <div>
+                    <span className="text-2xl font-bai-jamjuree text-black">Request ID: {id}</span>
+                  </div>
+                  {requestedAmount.length > index && (
+                    <div>
+                      <span className="text-2xl font-bai-jamjuree text-black">
+                        Requested Amount: {requestedAmount[index]} ETH
+                      </span>
+                    </div>
+                  )}
+                  {requestPaymentTime.length > index && (
+                    <div>
+                      <span className="text-2xl font-bai-jamjuree text-black">
+                        Payment Time: {requestPaymentTime[index]} Day
+                      </span>
+                    </div>
+                  )}
+                  {requestNftContractAddress.length > index && (
+                    <div>
+                      <a href={`https://etherscan.io/address/${requestNftContractAddress[index]}`} target="_blank" rel="noopener noreferrer">
+                        <span className="text-2xl font-bai-jamjuree text-black">
+                          NFT Contract: {requestNftContractAddress[index].substring(0, 10)}...
+                        </span>
+                      </a>
+                    </div>
+                  )}
+                  {requestNftTokenId.length > index && (
+                    <div>
+                      <span className="text-2xl font-bai-jamjuree text-black">
+                        NFT Token ID: {requestNftTokenId[index]}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all m-2 tracking-widest ${lendisLoading ? "loading" : ""
+                      }`}
+                      onClick={() => {
+                        wrapSetLendId(id);
+                        lendRequest();
+                      }}
+                  >
+                    {!lendisLoading && (
+                      <>
+                        Lend
+                      </>
+                    )}
+                  </button>
+                </div>
+              ))}
           </div>
-          <div className="flex rounded-full p-1 flex-shrink-0">
-            <div className="flex rounded-full  p-1">
-            </div>
-          </div>
+
+
+
         </div>
       </div>
     </div>

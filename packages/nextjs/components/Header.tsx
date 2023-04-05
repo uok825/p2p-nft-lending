@@ -51,6 +51,12 @@ export const Header = () => {
           Platform
         </NavLink>
       </li>
+      <li>
+        <NavLink href="/requests">
+          <SparklesIcon className="h-4 w-4" />
+          Requests
+        </NavLink>
+      </li>
     </>
   );
 
