@@ -23,7 +23,6 @@ export const Footer = () => {
                 <span>{ethPrice}</span>
               </div>
             )}
-            {getTargetNetwork().id === hardhat.id && <Faucet />}
           </div>
           <SwitchTheme className="pointer-events-auto" />
         </div>
@@ -31,39 +30,29 @@ export const Footer = () => {
       <div className="w-full">
         <ul className="menu menu-horizontal w-full">
           <div className="flex justify-center items-center gap-2 text-sm w-full">
+            <span>·</span>
             <div>
+              An experiment by {" "}
+              <a
+                href="https://github.com/uok825"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2"
+              >
+                @uok825
+              </a>
+              <span> · </span>
+               Built with <HeartIcon className="inline-block h-4 w-4" /> using 🏗{" "}
               <a
                 href="https://github.com/scaffold-eth/se-2"
                 target="_blank"
                 rel="noreferrer"
                 className="underline underline-offset-2"
               >
-                Fork me
+                Scaffold-ETH 2
               </a>
             </div>
             <span>·</span>
-            <div>
-              Built with <HeartIcon className="inline-block h-4 w-4" /> at 🏰{" "}
-              <a
-                href="https://buidlguidl.com/"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2"
-              >
-                BuidlGuidl
-              </a>
-            </div>
-            <span>·</span>
-            <div>
-              <a
-                href="https://t.me/joinchat/KByvmRe5wkR-8F_zz6AjpA"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2"
-              >
-                Support
-              </a>
-            </div>
           </div>
         </ul>
       </div>

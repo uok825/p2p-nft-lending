@@ -21,6 +21,7 @@ export const ContractInteractionforRequest = () => {
   const { address, isConnected } = useAccount();
   const [isLent, setIsLent] = useState([]);
   const [isValid, setIsValid] = useState([]);
+  const [isSet, setIsSet] = useState(false);
   const NFTLendingBorrowingContractInfo = useDeployedContractInfo("NFTLendingBorrowing");
   const NFTContractInfo = useDeployedContractInfo("NFT");
   const NFTLendingBorrowingContractAddress = NFTLendingBorrowingContractInfo?.data?.address;
@@ -28,7 +29,6 @@ export const ContractInteractionforRequest = () => {
 
   const wrapSetLendId = (id: any) => {
     setSelectedRequestId(id);
-    setLendBorrowId(id);
   }
 
 
@@ -61,7 +61,7 @@ export const ContractInteractionforRequest = () => {
     contractName: "NFTLendingBorrowing",
     functionName: "lend",
     args: [
-      BigNumber.from(lendBorrowId),
+      BigNumber.from(selectedRequestId),
     ],
     value: valueToLend.toString(),
   });
@@ -83,6 +83,10 @@ export const ContractInteractionforRequest = () => {
                   className="flex-1 w-80 h-38 flex-row mt-6 items-start items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3"
                   style={{ width: "25%", minWidth: "300px", margin: "1rem" }}
                 >
+                  <div className={`request-status ${isValid[index] && !isLent[index] ? 'text-green-500 rounded-2xl shadow-lg border-2 border-primary border-green-500 bg-inherit px-1' : isLent[index] ? 'text-blue-500 rounded-2xl shadow-lg border-2 border-blue-500 bg-inherit px-1' : 'text-red-700 rounded-2xl shadow-lg border-2 border-primary border-red-700 bg-inherit px-1'}`} style={{ width: "80px", textAlign: "center" }}>
+                    {isLent[index] ? 'Lent' : isValid[index] ? 'Active' : 'Cancelled'}
+                  </div>
+
                   <div>
                     <span className="text-2xl font-bai-jamjuree text-black">Request ID: {id}</span>
                   </div>
@@ -104,7 +108,7 @@ export const ContractInteractionforRequest = () => {
                     <div>
                       <a href={`https://etherscan.io/address/${requestNftContractAddress[index]}`} target="_blank" rel="noopener noreferrer">
                         <span className="text-2xl font-bai-jamjuree text-black">
-                          NFT Contract: {requestNftContractAddress[index].substring(0, 10)}...
+                          NFT Contract: {requestNftContractAddress[index].substring(0, 12)}...
                         </span>
                       </a>
                     </div>
@@ -116,32 +120,61 @@ export const ContractInteractionforRequest = () => {
                       </span>
                     </div>
                   )}
+                  <div className="flex flex-row">
+                  <button
+                    className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all m-2 tracking-widest`}
+                    onClick={() => {
+                      wrapSetLendId(id);
+                      setIsSet(true);
+                    }}
+                    disabled={isLent[index] || !isValid[index]}
+                  >
+                    {isLent[index] && (
+                      <>
+                        Lent <LinkIcon className="w-3 h-3 mt-0.5" />
+                      </>
+                    )}{!isLent[index] && !isValid[index] && (
+                      <>
+                        Cancelled <NoSymbolIcon className="w-3 h-3 mt-0.5" />
+                      </>
+                    )}{!isLent[index] && isValid[index] && (
+                      <>
+                        Select <PaperAirplaneIcon className="w-3 h-3 mt-0.5" />
+                      </>
+                    )}
+                  </button>
                   <button
                     className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all m-2 tracking-widest ${lendisLoading ? "loading" : ""
                       }`}
                     onClick={() => {
-                      wrapSetLendId(id);
+                      lendRequest();
                     }}
-                    disabled={isLent[index] || !isValid[index]}
+                    disabled={isLent[index] || !isValid[index] || !isSet || id != selectedRequestId}
                   >
                     {!lendisLoading && (
                       <>
-                        {isLent[index] ? (
+                        {isSet && (
                           <>
-                            Lent <LinkIcon className="w-3 h-3 mt-0.5" />
-                          </>
-                        ) : !isValid[index] ? (
-                          <>
-                            Cancelled <NoSymbolIcon className="w-3 h-3 mt-0.5" />
-                          </>
-                        ) : (
-                          <>
-                            Lend <PaperAirplaneIcon className="w-3 h-3 mt-0.5" />
+                            {isLent[index] ? (
+                              <>
+                                Lent <LinkIcon className="w-3 h-3 mt-0.5" />
+                              </>
+                            ) : !isValid[index] ? (
+                              <>
+                                Cancelled <NoSymbolIcon className="w-3 h-3 mt-0.5" />
+                              </>
+                            ) : (
+                              <>
+                                Lend <PaperAirplaneIcon className="w-3 h-3 mt-0.5" />
+                              </>
+                            )}
                           </>
                         )}
                       </>
                     )}
+
                   </button>
+                  </div>
                 </div>
               ))}
           </div>
