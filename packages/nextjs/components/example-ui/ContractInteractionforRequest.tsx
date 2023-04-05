@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CopyIcon } from "./assets/CopyIcon";
 import { DiamondIcon } from "./assets/DiamondIcon";
 import { HareIcon } from "./assets/HareIcon";
-import { ArrowSmallRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { NoSymbolIcon, LinkIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useDeployedContractInfo, useScaffoldContractRead, useScaffoldContractWrite, useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
 import { BigNumber } from "ethers";
 import { useAccount, useContractWrite } from "wagmi";
@@ -19,6 +19,8 @@ export const ContractInteractionforRequest = () => {
   const [lendBorrowId, setLendBorrowId] = useState(0);
   const [valueToLend, setValueToLend] = useState([]);
   const { address, isConnected } = useAccount();
+  const [isLent, setIsLent] = useState([]);
+  const [isValid, setIsValid] = useState([]);
   const NFTLendingBorrowingContractInfo = useDeployedContractInfo("NFTLendingBorrowing");
   const NFTContractInfo = useDeployedContractInfo("NFT");
   const NFTLendingBorrowingContractAddress = NFTLendingBorrowingContractInfo?.data?.address;
@@ -33,13 +35,13 @@ export const ContractInteractionforRequest = () => {
   useScaffoldContractRead({
     contractName: "NFTLendingBorrowing",
     functionName: "requests",
-    args: [BigNumber.from(selectedRequestId || 0)],
+    args: [BigNumber.from(selectedRequestId)],
     onSuccess(data: any) {
       setValueToLend(data.requestedAmount.div(BigNumber.from(10).pow(18)).toString());
     },
   });
 
-  
+
   useScaffoldContractRead({
     contractName: "NFTLendingBorrowing",
     functionName: "getRequestDetails",
@@ -49,20 +51,21 @@ export const ContractInteractionforRequest = () => {
       setRequestPaymentTime(allRequestDetails.map((getDetails: any) => getDetails.paymentTime.div(BigNumber.from(60).pow(2).mul(24)).toString()) || []);
       setRequestNftContractAddress(allRequestDetails.map((getDetails: any) => getDetails.nftContract.toString()) || []);
       setRequestNftTokenId(allRequestDetails.map((getDetails: any) => getDetails.nftTokenId.toString()) || []);
-      
+      setIsValid(allRequestDetails.map((getDetails: any) => getDetails.isValid) || []);
+      setIsLent(allRequestDetails.map((getDetails: any) => getDetails.isLent) || []);
     },
   });
 
-  
-    const { writeAsync: lendRequest, isLoading: lendisLoading} = useScaffoldContractWrite({
-      contractName: "NFTLendingBorrowing",
-      functionName: "lend",
-      args: [
-        BigNumber.from(lendBorrowId),
-      ],
-      value: valueToLend.toString(),
-    });
-  
+
+  const { writeAsync: lendRequest, isLoading: lendisLoading } = useScaffoldContractWrite({
+    contractName: "NFTLendingBorrowing",
+    functionName: "lend",
+    args: [
+      BigNumber.from(lendBorrowId),
+    ],
+    value: valueToLend.toString(),
+  });
+
   return (
     <div className="flex bg-base-300 relative pb-10">
       <DiamondIcon className="absolute top-24" />
@@ -116,14 +119,26 @@ export const ContractInteractionforRequest = () => {
                   <button
                     className={`btn btn-primary capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all m-2 tracking-widest ${lendisLoading ? "loading" : ""
                       }`}
-                      onClick={() => {
-                        wrapSetLendId(id);
-                        lendRequest();
-                      }}
+                    onClick={() => {
+                      wrapSetLendId(id);
+                    }}
+                    disabled={isLent[index] || !isValid[index]}
                   >
                     {!lendisLoading && (
                       <>
-                        Lend
+                        {isLent[index] ? (
+                          <>
+                            Lent <LinkIcon className="w-3 h-3 mt-0.5" />
+                          </>
+                        ) : !isValid[index] ? (
+                          <>
+                            Cancelled <NoSymbolIcon className="w-3 h-3 mt-0.5" />
+                          </>
+                        ) : (
+                          <>
+                            Lend <PaperAirplaneIcon className="w-3 h-3 mt-0.5" />
+                          </>
+                        )}
                       </>
                     )}
                   </button>
