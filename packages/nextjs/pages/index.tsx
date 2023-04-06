@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import type { NextPage } from "next";
-import { CheckBadgeIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon,ChevronRightIcon } from "@heroicons/react/24/outline";
 
 const Home: NextPage = () => {
   return (
@@ -27,48 +27,46 @@ const Home: NextPage = () => {
 
         </div>
 
-        <div className="flex-grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col sm:flex-col">
-          <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <CheckBadgeIcon className="h-8 w-8" />
-              <p>
-                You can create a Borrow Request.
+        <div className="flex-1 justify-around flex-none flex-row bg-base-300 w-full mt-16 px-8 py-12">
+            <div className="flex flex-wrap justify-around">
+            <div className="flex-1 flex-none items-center flex-row bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
+            <span className="block text-4xl mb-2">Step 1</span>
+            <span className="block text-3xl mb-2">Mint Test NFT</span>
+              <p className="text-xl">
+              First, we create a test NFT on our demo site and approve it.
+              This forms the basis of the lending-borrowing process.
               </p>
             </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <CheckBadgeIcon className="h-8 w-8" />
-              <p>
-                You can delete a Borrow Request.
+            <div className="flex-1 flex-none flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
+            <span className="block text-4xl mb-2">Step 2</span>
+            <span className="block text-3xl mb-2">Create Borrowing Request</span>
+              <p className="text-xl">
+              In the "Create Request" section, you need to enter the NFT contract address, NFT token IDs,
+                the amount you want to borrow, and the borrowing period.
+                This creates a borrowing request.
               </p>
             </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <CheckBadgeIcon className="h-8 w-8" />
-              <p>
-                You can Lend a Borrow Request.
+            <div className="flex-1 flex-none flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
+            <span className="block text-4xl mb-2">Step 3</span>
+            <span className="block text-3xl mb-2">Cancel Request</span>
+              <p className="text-xl">
+              You can cancel the request at any time before it has been lent out, if needed.
               </p>
             </div>
-            </div>
-            <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <CheckBadgeIcon className="h-8 w-8" />
-              <p>
+            <div className="flex-1 flex-none flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
+            <span className="block text-4xl mb-2">Step 4</span>
+            <span className="block text-3xl mb-2">Lend and Payment Time</span>
+              <p className="text-xl">
                 You can view all Request with details.
               </p>
             </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <CheckBadgeIcon className="h-8 w-8" />
-              <p>
+            <div className="flex-1 flex-none flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
+            <span className="block text-4xl mb-2">Step 5</span>
+            <span className="block text-3xl mb-2">Repay or Liquidate</span>
+              <p className="text-xl">
                 You can liquidate a Borrow Request if the payment has expired.
               </p>
             </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <CheckBadgeIcon className="h-8 w-8" />
-              <p>
-                You can repay a Lent Borrow Request by adding interest to it.
-              </p>
-            </div>
-          </div>
           </div>
         </div>
       </div>
