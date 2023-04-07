@@ -191,6 +191,7 @@ contract NFTLendingBorrowing is ReentrancyGuard {
 
         borrow.isLiquidated = true;
         req.isValid = false;
+        req.isLent = false;
 
         emit BorrowLiquidated(
             _borrowId,
@@ -227,6 +228,7 @@ contract NFTLendingBorrowing is ReentrancyGuard {
 
         borrow.isPaid = true;
         req.isValid = false;
+        req.isLent = false;
     }
     
 
