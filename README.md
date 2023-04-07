@@ -1,5 +1,6 @@
 # P2P NFT Lending Borrowing Platform by @uok825
-
+ It allows users to create and cancel borrow requests, lend requests, payback requests (with or without interest), and even liquidate requests. This platform represents a trustless and transparent lending environment, empowering users to leverage their NFTs securely and efficiently
+Video: https://www.loom.com/share/6df4f1b9e995410ba793b9ac6acf58e3
 ## Requirements
 
 Before you begin, you need to install the following tools:
