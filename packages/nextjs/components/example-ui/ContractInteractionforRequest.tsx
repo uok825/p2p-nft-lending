@@ -93,8 +93,8 @@ export const ContractInteractionforRequest = () => {
                   key={index}
                   className="flex-1 flex-none w-80 h-38 flex-row mt-6 items-start items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3"
                 >
-                  <div className={`request-status ${isValid[index] && !isLent[index] ? 'text-green-500 rounded-2xl shadow-lg border-2 border-primary border-green-500 bg-inherit px-1' : isLent[index] && !isPaid[index] ? 'text-blue-500 rounded-2xl shadow-lg border-2 border-blue-500 bg-inherit px-1' : isPaid[index]? 'text-orange-600 rounded-2xl shadow-lg border-2 border-primary border-orange-600 bg-inherit px-1' : isLiqudiated[index] ? 'text-purple-700 rounded-2xl shadow-lg border-2 border-primary border-purple-700 bg-inherit px-1' : 'text-red-700 rounded-2xl shadow-lg border-2 border-primary border-red-700 bg-inherit px-1'}`} style={{ width: "80px", textAlign: "center" }}>
-                    {isLent[index] ? 'Lent' : isValid[index] && !isPaid[index] && !isLiqudiated[index] ? 'Active' : isPaid[index] ? 'Paid' : isLiqudiated[index] ? 'Liqudiated' : 'Cancelled'}
+                  <div className={`request-status ${isValid[index] && !isLent[index] ? 'text-green-500 rounded-2xl shadow-lg border-2 border-primary border-green-500 bg-inherit px-1' : isLent[index] && !isPaid[index] ? 'text-blue-500 rounded-2xl shadow-lg border-2 border-blue-500 bg-inherit px-1' : isPaid[index] && !isLent[index] ? 'text-orange-600 rounded-2xl shadow-lg border-2 border-primary border-orange-600 bg-inherit px-1' : isLiqudiated[index] && !isLent[index] ? 'text-purple-700 rounded-2xl shadow-lg border-2 border-primary border-purple-700 bg-inherit px-1' : 'text-red-700 rounded-2xl shadow-lg border-2 border-primary border-red-700 bg-inherit px-1'}`} style={{ width: "80px", textAlign: "center" }}>
+                    {isLent[index] && isValid[index] ? 'Lent' : isValid[index] && !isPaid[index] && !isLiqudiated[index] ? 'Active' : isPaid[index] && !isLent[index] ? 'Paid' : isLiqudiated[index] && !isLent[index] ? 'Liqudiated' : 'Cancelled'}
                   </div>
 
                   <div>
@@ -143,7 +143,12 @@ export const ContractInteractionforRequest = () => {
                       <>
                         Lent <LinkIcon className="w-3 h-3 mt-0.5" />
                       </>
-                    )}{!isLent[index] && !isValid[index] && (
+                    )}
+                      {isPaid[index] && !isLent[index] && (
+                        <>
+                          Paid <LinkIcon className="w-3 h-3 mt-0.5" />
+                        </>
+                      )}{!isLent[index] && !isValid[index] && !isPaid[index] && (
                       <>
                         Cancelled <NoSymbolIcon className="w-3 h-3 mt-0.5" />
                       </>

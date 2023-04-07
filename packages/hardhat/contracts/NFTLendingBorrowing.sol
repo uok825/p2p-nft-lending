@@ -153,10 +153,10 @@ contract NFTLendingBorrowing is ReentrancyGuard {
         });
         borrows.push(newBorrow);
 
-        uint256 userBorrowCount = addressToBorrowCount[msg.sender];
-        addressToBorrowIds[msg.sender][userBorrowCount] = lastBorrowsId;
+        uint256 userBorrowCount = addressToBorrowCount[req.borrower];
+        addressToBorrowIds[req.borrower][userBorrowCount] = lastBorrowsId;
 
-        addressToBorrowCount[msg.sender]++;
+        addressToBorrowCount[req.borrower]++;
 
         IERC721 nft = IERC721(req.nftContract);
         nft.transferFrom(req.borrower, address(this), req.nftTokenId);
