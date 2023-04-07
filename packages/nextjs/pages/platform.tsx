@@ -2,7 +2,7 @@ import Head from "next/head";
 import type { NextPage } from "next";
 import { ContractInteraction } from "~~/components/example-ui/ContractInteraction";
 
-const PlatformUI: NextPage = () => {
+const ExampleUI: NextPage = () => {
   return (
     <>
       <Head>
@@ -19,4 +19,4 @@ const PlatformUI: NextPage = () => {
   );
 };
 
-export default PlatformUI;
+export default ExampleUI;

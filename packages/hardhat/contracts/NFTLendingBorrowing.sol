@@ -280,4 +280,11 @@ contract NFTLendingBorrowing is ReentrancyGuard {
         }
         return requestDetails;
     }
+        function getBorrowDetails() public view returns (Borrow[] memory) {
+        Borrow[] memory borrowDetails = new Borrow[](lastBorrowsId);
+        for (uint256 i = 0; i < lastBorrowsId; i++) {
+            borrowDetails[i] = borrows[i];
+        }
+        return borrowDetails;
+    }
 }

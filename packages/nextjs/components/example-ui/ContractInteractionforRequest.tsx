@@ -22,6 +22,8 @@ export const ContractInteractionforRequest = () => {
   const [isLent, setIsLent] = useState([]);
   const [isValid, setIsValid] = useState([]);
   const [isSet, setIsSet] = useState(false);
+  const [isLiqudiated, setIsLiqudiated] = useState([]);
+  const [isPaid, setIsPaid] = useState([]);
   const NFTLendingBorrowingContractInfo = useDeployedContractInfo("NFTLendingBorrowing");
   const NFTContractInfo = useDeployedContractInfo("NFT");
   const NFTLendingBorrowingContractAddress = NFTLendingBorrowingContractInfo?.data?.address;
@@ -55,6 +57,14 @@ export const ContractInteractionforRequest = () => {
       setIsLent(allRequestDetails.map((getDetails: any) => getDetails.isLent) || []); 
     },
   });
+  useScaffoldContractRead({
+    contractName: "NFTLendingBorrowing",
+    functionName: "getBorrowDetails",
+    onSuccess(allBorrowDetails: any) {
+      setIsLiqudiated(allBorrowDetails.map((getDetails: any) => getDetails.isLiqudiated) || []);
+      setIsPaid(allBorrowDetails.map((getDetails: any) => getDetails.isPaid) || []); 
+    },
+  });
 
 
   const { writeAsync: lendRequest, isLoading: lendisLoading } = useScaffoldContractWrite({
@@ -83,8 +93,8 @@ export const ContractInteractionforRequest = () => {
                   key={index}
                   className="flex-1 flex-none w-80 h-38 flex-row mt-6 items-start items-center rounded-2xl shadow-lg border-2 border-primary px-4 py-3"
                 >
-                  <div className={`request-status ${isValid[index] && !isLent[index] ? 'text-green-500 rounded-2xl shadow-lg border-2 border-primary border-green-500 bg-inherit px-1' : isLent[index] ? 'text-blue-500 rounded-2xl shadow-lg border-2 border-blue-500 bg-inherit px-1' : 'text-red-700 rounded-2xl shadow-lg border-2 border-primary border-red-700 bg-inherit px-1'}`} style={{ width: "80px", textAlign: "center" }}>
-                    {isLent[index] ? 'Lent' : isValid[index] ? 'Active' : 'Cancelled'}
+                  <div className={`request-status ${isValid[index] && !isLent[index] ? 'text-green-500 rounded-2xl shadow-lg border-2 border-primary border-green-500 bg-inherit px-1' : isLent[index] ? 'text-blue-500 rounded-2xl shadow-lg border-2 border-blue-500 bg-inherit px-1' : isPaid[index]? 'text-orange-600 rounded-2xl shadow-lg border-2 border-primary border-orange-600 bg-inherit px-1' : isLiqudiated[index] ? 'text-purple-700 rounded-2xl shadow-lg border-2 border-primary border-purple-700 bg-inherit px-1' : 'text-red-700 rounded-2xl shadow-lg border-2 border-primary border-red-700 bg-inherit px-1'}`} style={{ width: "80px", textAlign: "center" }}>
+                    {isLent[index] ? 'Lent' : isValid[index] ? 'Active' : isPaid[index] ? 'Paid' : isLiqudiated[index] ? 'Liqudiated' : 'Cancelled'}
                   </div>
 
                   <div>
