@@ -14,7 +14,7 @@ Before you begin, you need to install the following tools:
 2. Clone this repo & install dependencies
 
 ```
-git clone https://github.com/scaffold-eth/se-2.git
+git clone https://github.com/uok825/p2p-nft-lending.git
 cd se-2
 yarn install
 ```
